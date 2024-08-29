@@ -1,4 +1,3 @@
-// Uncomment these following global attributes to silence most warnings of "low" interest:
 #![allow(dead_code)]
 #![allow(unused_mut)]
 #![allow(unused_unsafe)]
@@ -165,17 +164,19 @@ fn main() {
 
         let vertices: Vec<f32> = vec![
             // Triangle 1
-            0.0,  10.5, 0.0,  // Vertex 1
-            -0.5, -0.5, 0.0, // Vertex 2
-            0.5, 2.5, 0.0,  // Vertex 3
+            -0.5, -0.5, 0.0,  // Vertex 1
+            0.5, -0.5, 0.0,   // Vertex 2
+            0.0, 0.5, 0.0,    // Vertex 3
+
             // Triangle 2
-            -0.5, 0.5, 0.0,
-            -1.0, -0.5, 0.0,
-            0.0, -0.5, 0.0,
-            // // Triangle 3 (and so on for 5 triangles)
-            0.5, 0.5, 0.0,
-            0.0, -0.5, 0.0,
-            1.0, -0.5, 0.0,
+            -0.8, 0.8, 0.0,   // Vertex 1
+            -0.2, 0.8, 0.0,   // Vertex 2
+            -0.5, 0.2, 0.0,   // Vertex 3
+
+            // Triangle 3
+            0.2, 0.8, 0.0,    // Vertex 1
+            0.8, 0.8, 0.0,    // Vertex 2
+            0.5, 0.2, 0.0,    // Vertex 3
         ];
 
         // Index data: the indices for the triangles
@@ -269,12 +270,9 @@ fn main() {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-
-                // == // Issue the necessary gl:: commands to draw your scene here
-
-
-
+            
+                // Draw the triangles using the indices
+                gl::DrawElements(gl::TRIANGLES, indices.len() as i32, gl::UNSIGNED_INT, ptr::null());
             }
 
             // Display the new color buffer on the display
