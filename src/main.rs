@@ -62,28 +62,28 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
     let mut vbo: u32 = 0;
     let mut ibo: u32 = 0;
 
-    // generate and bind the vertex array object (VAO)
+    // generate vertex array object (VAO)
     gl::GenVertexArrays(1, &mut vao);
-    gl::BindVertexArray(vao);
+    gl::BindVertexArray(vao); // bind so the vao variable actually changes
 
     // generate and bind the vertex buffer object (VBO)
     gl::GenBuffers(1, &mut vbo);
-    gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+    gl::BindBuffer(gl::ARRAY_BUFFER, vbo); // make ARRAY_BUFFER the active vertex buffer
     gl::BufferData(
         gl::ARRAY_BUFFER,
-        (vertices.len() as i32 * size_of::<f32>()) as isize,
+        byte_size_of_array(vertices),
         pointer_to_array(vertices),
         gl::STATIC_DRAW,
     );
 
     // configure the vertex attribute pointer (VAP)
     gl::VertexAttribPointer(
-        0,         // Index of the vertex attribute
+        0,
         3,         // num of components per attribute (3 since x,y,z)
         gl::FLOAT, // data type
         gl::FALSE,
-        3 * size_of::<f32>(), // Stride (distance between consecutive vertices)
-        ptr::null(),          // Offset of the first component
+        3 * size_of::<f32>(),
+        ptr::null(),
     );
     gl::EnableVertexAttribArray(0);
 
@@ -92,7 +92,7 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
     gl::BufferData(
         gl::ELEMENT_ARRAY_BUFFER,
-        (indices.len() as i32 * size_of::<u32>()) as isize,
+        byte_size_of_array(indices),
         pointer_to_array(indices),
         gl::STATIC_DRAW,
     );
@@ -149,7 +149,7 @@ fn main() {
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
             gl::DepthFunc(gl::LESS);
-            gl::Enable(gl::CULL_FACE);
+            gl::Enable(gl::CULL_FACE); // only draw counter-clockwise triangles
             gl::Disable(gl::MULTISAMPLE);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
@@ -169,40 +169,46 @@ fn main() {
             );
         }
 
-        // == // Set up your VAO around here
-
-        // let my_vao = unsafe { 1337 };
-
         let vertices: Vec<f32> = vec![
-            // Triangle 1
-            0.0, 0.0, 0.0, // Vertex 1
-            0.5, 0.1, 0.0, // Vertex 2
-            0.0, 0.5, 0.0, // Vertex 3
-            // Triangle 2
-            -0.8, 0.8, 0.0, // Vertex 1
-            -0.5, 0.2, 0.0, // Vertex 3
-            -0.2, 0.8, 0.0, // Vertex 2
-            // // Triangle 3
-            0.2, 0.8, 0.0, // Vertex 1
-            0.5, 0.2, 0.0, // Vertex 3
-            0.8, 0.8, 0.0, // Vertex 2
+            // triangle 1
+            0.0, -0.5, 0.0, // vertex 1
+            0.5, -0.1, 0.0, // vertex 2
+            0.0, -0.1, 0.0, // vertex 3
+            // triangle 2
+            -0.8, -0.8, 0.0, // vertex 1
+            -0.2, -0.8, 0.0, // vertex 2
+            -0.5, -0.2, 0.0, // vertex 3
+            // triangle 3
+            0.2, 0.8, 0.0, // vertex 1
+            0.5, 0.2, 0.0, // vertex 2
+            0.8, 0.8, 0.0, // vertex 3
+            // triangle 4
+            0.0, 0.0, 0.0, // vertex 1
+            0.5, 0.1, 0.0, // vertex 2
+            0.0, 0.5, 0.0, // vertex 3
+            // triangle 5
+            -0.8, 0.8, 0.0, // vertex 1
+            -0.5, 0.2, 0.0, // vertex 2
+            -0.2, 0.8, 0.0, // vertex 3
         ];
 
         // Index data: the indices for the triangles
         let indices: Vec<u32> = vec![
-            0, 1, 2, // Triangle 1
-            3, 4, 5, // Triangle 2
-            6, 7, 8, // Triangle 3
+            0, 1, 2, // triangle 1
+            3, 4, 5, // triangle 2
+            6, 7, 8, // triangle 3
+            9, 10, 11, // triangle 4
+            12, 13, 14, // triangle 5
         ];
 
-        // Create VAO using the unsafe function you defined earlier
+        // actually creating the VAO
         let my_vao = unsafe { create_vao(&vertices, &indices) };
 
         // 2a)
         let triangle_vertices: Vec<f32> = vec![
-            0.6, -0.8, -1.2, // Point 1
-            0.0, 0.4, 0.0, // Point 2
-            -0.8, -0.2, 1.2, //Point 3
+            0.6, -0.8, -1.2, // point 1
+            0.0, 0.4, 0.0, // point 2
+            -0.8, -0.2, 1.2, // point 3
         ];
 
         let triangle_indices: Vec<u32> = vec![0, 1, 2];
@@ -220,13 +226,10 @@ fn main() {
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
                 .attach_file("./shaders/simple.vert")
-                .attach_file("./shaders/simple.frag")
+                .attach_file("./shaders/red.frag")
                 .link()
+                .activate()
         };
-
-        unsafe {
-            simple_shader.activate();
-        }
 
         // Used to demonstrate keyboard handling for exercise 2.
         let mut _arbitrary_number = 0.0; // feel free to remove
