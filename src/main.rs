@@ -11,6 +11,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::{mem, os::raw::c_void, ptr};
 
+mod obj;
 mod shader;
 mod util;
 
@@ -81,7 +82,7 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         0,
         3,         // num of components per attribute (3 since x,y,z)
         gl::FLOAT, // data type
-        gl::FALSE,
+        gl::FALSE, // normalize
         3 * size_of::<f32>(),
         ptr::null(),
     );
@@ -208,11 +209,32 @@ fn main() {
             -0.8, -0.2, 1.2, // point 3
         ];
 
-        let triangle_indices: Vec<u32> = vec![0, 1, 2];
+        let pyramid_vertices: Vec<f32> = vec![
+            0.0, 0.0, 0.0, // vertex 1
+            1.0, 0.0, 0.0, // vertex 2
+            1.0, 1.0, 0.0, // vertex 3
+            0.0, 1.0, 0.0, // vertex 4
+            0.5, 0.5, 1.6, // vertex 5
+        ];
 
+        let pyramid_indices: Vec<u32> = vec![1, 2, 3, 4, 5];
+
+        let triangle_indices: Vec<u32> = vec![0, 1, 2];
         // actually creating the VAO
-        let my_vao = unsafe { create_vao(&vertices, &indices) };
+        // let my_vao = unsafe { create_vao(&vertices, &indices) };
+        // let pyramid_vao = unsafe { create_vao(&pyramid_vertices, &pyramid_indices) };
         // let my_triangle = unsafe { create_vao(&triangle_vertices, &triangle_indices) };
+
+        let mut obj_parser = obj::ObjParser::new("./models/cube.obj");
+        obj_parser.parse();
+
+        let vertices = obj_parser.get_vertices();
+        let indices = obj_parser.get_indices();
+
+        println!("Vertices: {:?} Length: {:?}", vertices, vertices.len());
+        println!("Indices: {:?} Length: {:?}", indices, indices.len());
+
+        let cube_vao = unsafe { create_vao(&vertices, &indices) };
 
         // == // Set up your shaders here
         // Basic usage of shader helper:
@@ -225,7 +247,7 @@ fn main() {
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
                 .attach_file("./shaders/simple.vert")
-                .attach_file("./shaders/simple.frag")
+                .attach_file("./shaders/green.frag")
                 .link()
                 .activate()
         };
