@@ -201,9 +201,6 @@ fn main() {
             12, 13, 14, // triangle 5
         ];
 
-        // actually creating the VAO
-        let my_vao = unsafe { create_vao(&vertices, &indices) };
-
         // 2a)
         let triangle_vertices: Vec<f32> = vec![
             0.6, -0.8, -1.2, // point 1
@@ -213,6 +210,8 @@ fn main() {
 
         let triangle_indices: Vec<u32> = vec![0, 1, 2];
 
+        // actually creating the VAO
+        let my_vao = unsafe { create_vao(&vertices, &indices) };
         // let my_triangle = unsafe { create_vao(&triangle_vertices, &triangle_indices) };
 
         // == // Set up your shaders here
@@ -226,7 +225,7 @@ fn main() {
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
                 .attach_file("./shaders/simple.vert")
-                .attach_file("./shaders/red.frag")
+                .attach_file("./shaders/simple.frag")
                 .link()
                 .activate()
         };
