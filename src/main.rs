@@ -58,18 +58,17 @@ fn offset<T>(n: u32) -> *const c_void {
 // ptr::null()
 
 unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
-    // define the variables needed which is mutable
     let mut vao: u32 = 0;
     let mut vbo: u32 = 0;
     let mut ibo: u32 = 0;
 
-    // generate vertex array object (VAO)
+    // vertex array object (VAO)
     gl::GenVertexArrays(1, &mut vao);
-    gl::BindVertexArray(vao); // bind so the vao variable actually changes
+    gl::BindVertexArray(vao);
 
-    // generate and bind the vertex buffer object (VBO)
+    // vertex buffer object (VBO)
     gl::GenBuffers(1, &mut vbo);
-    gl::BindBuffer(gl::ARRAY_BUFFER, vbo); // make ARRAY_BUFFER the active vertex buffer
+    gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
     gl::BufferData(
         gl::ARRAY_BUFFER,
         byte_size_of_array(vertices),
@@ -77,18 +76,18 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         gl::STATIC_DRAW,
     );
 
-    // configure the vertex attribute pointer (VAP)
+    // vertex attribute pointer
     gl::VertexAttribPointer(
         0,
-        3,         // num of components per attribute (3 since x,y,z)
-        gl::FLOAT, // data type
-        gl::FALSE, // normalize
+        3,
+        gl::FLOAT,
+        gl::FALSE,
         3 * size_of::<f32>(),
         ptr::null(),
     );
     gl::EnableVertexAttribArray(0);
 
-    // generate and bind the index buffer object (IBO)
+    // index buffer object (IBO)
     gl::GenBuffers(1, &mut ibo);
     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
     gl::BufferData(
@@ -98,7 +97,7 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         gl::STATIC_DRAW,
     );
 
-    // return the vao id created by OpenGL
+    // return the actual vao id
     vao
 }
 
@@ -235,7 +234,7 @@ fn main() {
         // println!("Vertices: {:?} Length: {:?}", vertices, vertices.len());
         // println!("Indices: {:?} Length: {:?}", indices, indices.len());
 
-        let cube_vao = unsafe { create_vao(&vertices, &indices) };
+        let airboat_vao = unsafe { create_vao(&vertices, &indices) };
 
         // == // Set up your shaders here
         // Basic usage of shader helper:
