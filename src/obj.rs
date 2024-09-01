@@ -21,6 +21,11 @@ impl ObjParser {
         let path = Path::new(&self.file_path);
         let file = File::open(&path).unwrap();
         let reader = BufReader::new(file);
+        let mut temp_x_vertices: Vec<f32> = Vec::new();
+        let mut temp_y_vertices: Vec<f32> = Vec::new();
+        let mut temp_z_vertices: Vec<f32> = Vec::new();
+        let mut max_x_value: f32 = 0.0;
+        let mut max_y_value: f32 = 0.0;
 
         for line in reader.lines() {
             let line = line.unwrap();
@@ -31,10 +36,18 @@ impl ObjParser {
                 let x: f32 = parts[1].parse().unwrap();
                 let y: f32 = parts[2].parse().unwrap();
                 let z: f32 = parts[3].parse().unwrap();
-                // scale down to fit in the window
-                self.vertices.push(x / 2.0);
-                self.vertices.push(y / 2.0);
-                self.vertices.push(z / 2.0);
+
+                if x.abs() > max_x_value {
+                    max_x_value = x.abs();
+                }
+
+                if y.abs() > max_y_value {
+                    max_y_value = y.abs();
+                }
+
+                temp_x_vertices.push(x);
+                temp_y_vertices.push(y);
+                temp_z_vertices.push(z);
             }
             // face indices
             else if line.starts_with("f ") {
@@ -44,6 +57,16 @@ impl ObjParser {
                     self.indices.push(index);
                 }
             }
+        }
+
+        // scale down to fit the window
+        for i in 0..temp_x_vertices.len() {
+            // self.vertices.push(temp_x_vertices[i]);
+            // self.vertices.push(temp_y_vertices[i]);
+            self.vertices.push(temp_x_vertices[i] / max_x_value);
+            self.vertices.push(temp_y_vertices[i] / max_y_value);
+            // self.vertices.push(temp_z_vertices[i]);
+            self.vertices.push(0.0);
         }
     }
 

@@ -208,6 +208,7 @@ fn main() {
             0.0, 0.4, 0.0, // point 2
             -0.8, -0.2, 1.2, // point 3
         ];
+        let triangle_indices: Vec<u32> = vec![0, 1, 2];
 
         let pyramid_vertices: Vec<f32> = vec![
             0.0, 0.0, 0.0, // vertex 1
@@ -219,20 +220,20 @@ fn main() {
 
         let pyramid_indices: Vec<u32> = vec![1, 2, 3, 4, 5];
 
-        let triangle_indices: Vec<u32> = vec![0, 1, 2];
         // actually creating the VAO
         // let my_vao = unsafe { create_vao(&vertices, &indices) };
         // let pyramid_vao = unsafe { create_vao(&pyramid_vertices, &pyramid_indices) };
         // let my_triangle = unsafe { create_vao(&triangle_vertices, &triangle_indices) };
 
-        let mut obj_parser = obj::ObjParser::new("./models/cube.obj");
+        // let mut obj_parser = obj::ObjParser::new("./models/cube.obj");
+        let mut obj_parser = obj::ObjParser::new("./models/airboat.obj");
         obj_parser.parse();
 
         let vertices = obj_parser.get_vertices();
         let indices = obj_parser.get_indices();
 
-        println!("Vertices: {:?} Length: {:?}", vertices, vertices.len());
-        println!("Indices: {:?} Length: {:?}", indices, indices.len());
+        // println!("Vertices: {:?} Length: {:?}", vertices, vertices.len());
+        // println!("Indices: {:?} Length: {:?}", indices, indices.len());
 
         let cube_vao = unsafe { create_vao(&vertices, &indices) };
 
@@ -247,7 +248,7 @@ fn main() {
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
                 .attach_file("./shaders/simple.vert")
-                .attach_file("./shaders/green.frag")
+                .attach_file("./shaders/red.frag")
                 .link()
                 .activate()
         };
