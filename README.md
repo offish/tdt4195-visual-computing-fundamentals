@@ -1,6 +1,8 @@
-# Gloom-rs
+# Assignment 1
+Forked from [gloom-rs](https://github.com/pbsds/gloom-rs)
 
-To get started, make sure you have `git`, `cargo` and, `rustc` installed and available.
+
+<!-- To get started, make sure you have `git`, `cargo` and, `rustc` installed and available.
 
 	git clone https://github.com/pbsds/gloom-rs
 	cd gloom-rs
@@ -52,4 +54,4 @@ To automatically make an archive (`source.zip`) ready for uploading to blackboar
 This zip script will explicitly ignore the `target` folder, and the following two of the files given as a handout for exercise 3 (just to save space):
 
 * `resources/helicopter.obj`
-* `resources/lunarsurface.obj`
+* `resources/lunarsurface.obj` -->
