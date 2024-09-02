@@ -26,6 +26,7 @@ impl ObjParser {
         let mut temp_z_vertices: Vec<f32> = Vec::new();
         let mut max_x_value: f32 = 0.0;
         let mut max_y_value: f32 = 0.0;
+        let mut max_value: f32 = 0.0;
 
         for line in reader.lines() {
             let line = line.unwrap();
@@ -59,12 +60,18 @@ impl ObjParser {
             }
         }
 
+        if max_x_value > max_y_value {
+            max_value = max_x_value;
+        } else {
+            max_value = max_y_value;
+        }
+
         // scale down to fit the window
         for i in 0..temp_x_vertices.len() {
             // self.vertices.push(temp_x_vertices[i]);
             // self.vertices.push(temp_y_vertices[i]);
-            self.vertices.push(temp_x_vertices[i] / max_x_value);
-            self.vertices.push(temp_y_vertices[i] / max_y_value);
+            self.vertices.push(temp_x_vertices[i] / max_value);
+            self.vertices.push(temp_y_vertices[i] / max_value);
             // self.vertices.push(temp_z_vertices[i]);
             self.vertices.push(0.0);
         }
