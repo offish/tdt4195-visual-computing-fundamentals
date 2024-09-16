@@ -57,9 +57,10 @@ fn offset<T>(n: u32) -> *const c_void {
 // Get a null pointer (equivalent to an offset of 0)
 // ptr::null()
 
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
+unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>) -> u32 {
     let mut vao: u32 = 0;
     let mut vbo: u32 = 0;
+    let mut color_vbo: u32 = 0;
     let mut ibo: u32 = 0;
 
     // vertex array object (VAO)
@@ -76,7 +77,7 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         gl::STATIC_DRAW,
     );
 
-    // vertex attribute pointer
+    // vertex attribute pointer (position)
     gl::VertexAttribPointer(
         0,
         3,
@@ -86,6 +87,27 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
         ptr::null(),
     );
     gl::EnableVertexAttribArray(0);
+
+    // color buffer object
+    gl::GenBuffers(1, &mut color_vbo);
+    gl::BindBuffer(gl::ARRAY_BUFFER, color_vbo);
+    gl::BufferData(
+        gl::ARRAY_BUFFER,
+        byte_size_of_array(colors),
+        pointer_to_array(colors),
+        gl::STATIC_DRAW,
+    );
+
+    // vertex attribute pointer (color)
+    gl::VertexAttribPointer(
+        1,
+        4,
+        gl::FLOAT,
+        gl::FALSE,
+        4 * size_of::<f32>(),
+        ptr::null(),
+    );
+    gl::EnableVertexAttribArray(1);
 
     // index buffer object (IBO)
     gl::GenBuffers(1, &mut ibo);
@@ -182,14 +204,6 @@ fn main() {
             0.2, 0.8, 0.0, // vertex 1
             0.5, 0.2, 0.0, // vertex 2
             0.8, 0.8, 0.0, // vertex 3
-            // triangle 4
-            0.0, 0.0, 0.0, // vertex 1
-            0.5, 0.1, 0.0, // vertex 2
-            0.0, 0.5, 0.0, // vertex 3
-            // triangle 5
-            -0.8, 0.8, 0.0, // vertex 1
-            -0.5, 0.2, 0.0, // vertex 2
-            -0.2, 0.8, 0.0, // vertex 3
         ];
 
         // Index data: the indices for the triangles
@@ -197,44 +211,57 @@ fn main() {
             0, 1, 2, // triangle 1
             3, 4, 5, // triangle 2
             6, 7, 8, // triangle 3
-            9, 10, 11, // triangle 4
-            12, 13, 14, // triangle 5
+        ];
+
+        let colors: Vec<f32> = vec![
+            // triangle 1
+            1.0, 0.0, 0.0, 1.0, // vertex 1
+            0.0, 1.0, 0.0, 1.0, // vertex 2
+            0.0, 0.0, 1.0, 1.0, // vertex 3
+            // triangle 2
+            1.0, 1.0, 0.0, 1.0, // vertex 1
+            0.0, 1.0, 1.0, 1.0, // vertex 2
+            1.0, 0.0, 1.0, 1.0, // vertex 3
+            // triangle 3
+            0.0, 0.0, 0.0, 1.0, // vertex 1
+            1.0, 1.0, 1.0, 1.0, // vertex 2
+            1.0, 0.5, 0.5, 1.0, // vertex 3
         ];
 
         // 2a)
-        let triangle_vertices: Vec<f32> = vec![
-            0.6, -0.8, -1.2, // point 1
-            0.0, 0.4, 0.0, // point 2
-            -0.8, -0.2, 1.2, // point 3
-        ];
-        let triangle_indices: Vec<u32> = vec![0, 1, 2];
+        // let triangle_vertices: Vec<f32> = vec![
+        //     0.6, -0.8, -1.2, // point 1
+        //     0.0, 0.4, 0.0, // point 2
+        //     -0.8, -0.2, 1.2, // point 3
+        // ];
+        // let triangle_indices: Vec<u32> = vec![0, 1, 2];
 
-        let pyramid_vertices: Vec<f32> = vec![
-            0.0, 0.0, 0.0, // vertex 1
-            1.0, 0.0, 0.0, // vertex 2
-            1.0, 1.0, 0.0, // vertex 3
-            0.0, 1.0, 0.0, // vertex 4
-            0.5, 0.5, 1.6, // vertex 5
-        ];
+        // let pyramid_vertices: Vec<f32> = vec![
+        //     0.0, 0.0, 0.0, // vertex 1
+        //     1.0, 0.0, 0.0, // vertex 2
+        //     1.0, 1.0, 0.0, // vertex 3
+        //     0.0, 1.0, 0.0, // vertex 4
+        //     0.5, 0.5, 1.6, // vertex 5
+        // ];
 
-        let pyramid_indices: Vec<u32> = vec![1, 2, 3, 4, 5];
+        // let pyramid_indices: Vec<u32> = vec![1, 2, 3, 4, 5];
 
         // actually creating the VAO
-        // let my_vao = unsafe { create_vao(&vertices, &indices) };
+        let my_vao = unsafe { create_vao(&vertices, &indices, &colors) };
         // let pyramid_vao = unsafe { create_vao(&pyramid_vertices, &pyramid_indices) };
         // let my_triangle = unsafe { create_vao(&triangle_vertices, &triangle_indices) };
 
         // let mut obj_parser = obj::ObjParser::new("./models/cube.obj");
-        let mut obj_parser = obj::ObjParser::new("./models/airboat.obj");
-        obj_parser.parse();
+        // let mut obj_parser = obj::ObjParser::new("./models/airboat.obj");
+        // obj_parser.parse();
 
-        let vertices = obj_parser.get_vertices();
-        let indices = obj_parser.get_indices();
+        // let vertices = obj_parser.get_vertices();
+        // let indices = obj_parser.get_indices();
 
         // println!("Vertices: {:?} Length: {:?}", vertices, vertices.len());
         // println!("Indices: {:?} Length: {:?}", indices, indices.len());
 
-        let airboat_vao = unsafe { create_vao(&vertices, &indices) };
+        // let airboat_vao = unsafe { create_vao(&vertices, &indices) };
 
         // == // Set up your shaders here
         // Basic usage of shader helper:
@@ -247,7 +274,7 @@ fn main() {
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
                 .attach_file("./shaders/simple.vert")
-                .attach_file("./shaders/red.frag")
+                .attach_file("./shaders/simple.frag")
                 .link()
                 .activate()
         };

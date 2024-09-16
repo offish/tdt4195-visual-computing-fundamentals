@@ -1,8 +1,10 @@
 #version 430 core
 
+in vec4 fragmentColor; // color from vert (interpolated color)
 out vec4 color;
 
 void main()
 {
-    color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    // set color
+    color = fragmentColor;
 }

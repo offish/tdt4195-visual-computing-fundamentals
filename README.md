@@ -1,4 +1,4 @@
-# Assignment 1
+# Assignment 2
 Forked from [gloom-rs](https://github.com/pbsds/gloom-rs)
 
 
