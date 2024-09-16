@@ -193,17 +193,17 @@ fn main() {
 
         let vertices: Vec<f32> = vec![
             // triangle 1
-            0.0, -0.5, 0.0, // vertex 1
-            0.5, -0.1, 0.0, // vertex 2
-            0.0, -0.1, 0.0, // vertex 3
+            -0.25, 0.09, 0.5, // vertex 1
+            0.58, 0.56, 0.5, // vertex 2
+            -0.06, 0.96, 0.5, // vertex 3
             // triangle 2
-            -0.8, -0.8, 0.0, // vertex 1
-            -0.2, -0.8, 0.0, // vertex 2
-            -0.5, -0.2, 0.0, // vertex 3
+            -0.25, -0.47, 0.0, // vertex 1
+            0.68, -0.15, 0.0, // vertex 3
+            0.11, 0.67, 0.0, // vertex 2
             // triangle 3
-            0.2, 0.8, 0.0, // vertex 1
-            0.5, 0.2, 0.0, // vertex 2
-            0.8, 0.8, 0.0, // vertex 3
+            0.1, 0.44, -0.5, // vertex 1
+            0.8, 0.09, -0.5, // vertex 2
+            0.72, 0.99, -0.5, // vertex 3
         ];
 
         // Index data: the indices for the triangles
@@ -215,17 +215,15 @@ fn main() {
 
         let colors: Vec<f32> = vec![
             // triangle 1
-            1.0, 0.0, 0.0, 1.0, // vertex 1
-            0.0, 1.0, 0.0, 1.0, // vertex 2
-            0.0, 0.0, 1.0, 1.0, // vertex 3
-            // triangle 2
-            1.0, 1.0, 0.0, 1.0, // vertex 1
-            0.0, 1.0, 1.0, 1.0, // vertex 2
-            1.0, 0.0, 1.0, 1.0, // vertex 3
-            // triangle 3
-            0.0, 0.0, 0.0, 1.0, // vertex 1
-            1.0, 1.0, 1.0, 1.0, // vertex 2
-            1.0, 0.5, 0.5, 1.0, // vertex 3
+            1.0, 0.0, 0.0, 0.8, // vertex 1
+            1.0, 0.0, 0.0, 0.8, // vertex 1
+            1.0, 0.0, 0.0, 0.8, // vertex 1
+            0.0, 1.0, 0.0, 0.6, // vertex 1
+            0.0, 1.0, 0.0, 0.6, // vertex 1
+            0.0, 1.0, 0.0, 0.6, // vertex 1
+            0.0, 0.0, 1.0, 0.4, // vertex 3
+            0.0, 0.0, 1.0, 0.4, // vertex 3
+            0.0, 0.0, 1.0, 0.4, // vertex 3
         ];
 
         // 2a)
