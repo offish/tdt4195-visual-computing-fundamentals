@@ -193,17 +193,31 @@ fn main() {
 
         let vertices: Vec<f32> = vec![
             // triangle 1
-            -0.25, 0.09, 0.5, // vertex 1
-            0.58, 0.56, 0.5, // vertex 2
-            -0.06, 0.96, 0.5, // vertex 3
+            -0.25, -0.47, 0.9, // vertex 1
+            0.68, -0.15, 0.9, // vertex 3
+            0.11, 0.67, 0.9, // vertex 2
+            0.1, 0.44, 0.5, // vertex 1
+            0.8, 0.09, 0.5, // vertex 2
+            0.72, 0.99, 0.5, // a
+            -0.25, 0.09, 0.1, // vertex 1
+            0.58, 0.56, 0.1, // vertex 2
+            -0.06, 0.96,
+            0.1,
+            //
+            // vertex 3
             // triangle 2
-            -0.25, -0.47, 0.0, // vertex 1
-            0.68, -0.15, 0.0, // vertex 3
-            0.11, 0.67, 0.0, // vertex 2
             // triangle 3
-            0.1, 0.44, -0.5, // vertex 1
-            0.8, 0.09, -0.5, // vertex 2
-            0.72, 0.99, -0.5, // vertex 3
+            // -0.25, 0.09, 0.5, // vertex 1
+            // 0.58, 0.56, 0.5, // vertex 2
+            // -0.06, 0.96, 0.5, // vertex 3
+            // // triangle 2
+            // -0.25, -0.47, 0.0, // vertex 1
+            // 0.68, -0.15, 0.0, // vertex 3
+            // 0.11, 0.67, 0.0, // vertex 2
+            // // triangle 3
+            // 0.1, 0.44, -0.5, // vertex 1
+            // 0.8, 0.09, -0.5, // vertex 2
+            // 0.72, 0.99, -0.5, // vertex 3
         ];
 
         // Index data: the indices for the triangles
@@ -278,12 +292,21 @@ fn main() {
         };
 
         // Used to demonstrate keyboard handling for exercise 2.
-        let mut _arbitrary_number = 0.0; // feel free to remove
+        let mut _x_unit_value: f32 = 0.0;
+        let mut _y_unit_value: f32 = 0.0;
+        let mut _z_unit_value: f32 = 0.0;
+        let movement_unit: f32 = 0.65;
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
         let mut previous_frame_time = first_frame_time;
         loop {
+            _y_unit_value -= 0.5 * movement_unit;
+
+            if _y_unit_value < 0.0 {
+                _y_unit_value = 0.0;
+            }
+
             // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
@@ -309,12 +332,26 @@ fn main() {
                     match key {
                         // The `VirtualKeyCode` enum is defined here:
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
-                        VirtualKeyCode::A => {
-                            _arbitrary_number += delta_time;
+                        VirtualKeyCode::W => {
+                            _z_unit_value -= movement_unit * delta_time;
+                        }
+                        VirtualKeyCode::S => {
+                            _z_unit_value += movement_unit * delta_time;
                         }
                         VirtualKeyCode::D => {
-                            _arbitrary_number -= delta_time;
+                            _x_unit_value += 20.0 * movement_unit * delta_time;
                         }
+                        VirtualKeyCode::A => {
+                            _x_unit_value -= 20.0 * movement_unit * delta_time;
+                        }
+                        VirtualKeyCode::Space => {
+                            _y_unit_value += movement_unit;
+                        }
+                        VirtualKeyCode::LShift => {
+                            _y_unit_value -= 1.0 * movement_unit;
+                        }
+
+                        // NOTE: also add arrow keys for rotation
 
                         // default handler:
                         _ => {}
@@ -335,7 +372,22 @@ fn main() {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-                gl::Uniform1f(2, elapsed.sin());
+
+                // pass time to shader
+                // gl::Uniform1f(2, elapsed.sin());
+
+                // pass transformations to shader
+                // let identity: glm::Mat4x4 = glm::identity();
+                // gl::UniformMatrix4fv(2, 1, gl::FALSE, identity.as_ptr());
+
+                let perspective: glm::Mat4x4 =
+                    glm::perspective(window_aspect_ratio, 75.0, 1.0, 100.0);
+
+                gl::UniformMatrix4fv(2, 1, gl::FALSE, perspective.as_ptr());
+
+                let mut position: glm::Mat4x4 =
+                    glm::translation(&glm::vec3(_x_unit_value, _y_unit_value, _z_unit_value));
+                gl::UniformMatrix4fv(3, 1, gl::FALSE, position.as_ptr());
 
                 // Draw the triangles using the indices
                 gl::DrawElements(
