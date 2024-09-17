@@ -295,7 +295,12 @@ fn main() {
         let mut _x_unit_value: f32 = 0.0;
         let mut _y_unit_value: f32 = 0.0;
         let mut _z_unit_value: f32 = 0.0;
+        let mut _x_rotation: f32 = 0.0;
+        let mut _y_rotation: f32 = 0.0;
+        // let mut _z_rotation: f32 = 0.0;
         let movement_unit: f32 = 0.65;
+        let rotation_unit: f32 = 0.75;
+        let one_full_rotation: f32 = 2.0 * std::f32::consts::PI;
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
@@ -348,10 +353,20 @@ fn main() {
                             _y_unit_value += movement_unit;
                         }
                         VirtualKeyCode::LShift => {
-                            _y_unit_value -= 1.0 * movement_unit;
+                            _y_unit_value -= movement_unit;
                         }
-
-                        // NOTE: also add arrow keys for rotation
+                        VirtualKeyCode::Up => {
+                            _x_rotation += rotation_unit * delta_time;
+                        }
+                        VirtualKeyCode::Down => {
+                            _x_rotation -= rotation_unit * delta_time;
+                        }
+                        VirtualKeyCode::Left => {
+                            _y_rotation += rotation_unit * delta_time;
+                        }
+                        VirtualKeyCode::Right => {
+                            _y_rotation -= rotation_unit * delta_time;
+                        }
 
                         // default handler:
                         _ => {}
@@ -388,6 +403,11 @@ fn main() {
                 let mut position: glm::Mat4x4 =
                     glm::translation(&glm::vec3(_x_unit_value, _y_unit_value, _z_unit_value));
                 gl::UniformMatrix4fv(3, 1, gl::FALSE, position.as_ptr());
+
+                let mut rotation: glm::Mat4x4 =
+                    glm::rotation(_x_rotation, &glm::vec3(1.0, 0.0, 0.0))
+                        * glm::rotation(_y_rotation, &glm::vec3(0.0, 1.0, 0.0));
+                gl::UniformMatrix4fv(4, 1, gl::FALSE, rotation.as_ptr());
 
                 // Draw the triangles using the indices
                 gl::DrawElements(
