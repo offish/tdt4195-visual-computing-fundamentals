@@ -291,25 +291,34 @@ fn main() {
                 .activate()
         };
 
-        // Used to demonstrate keyboard handling for exercise 2.
-        let mut _x_unit_value: f32 = 0.0;
-        let mut _y_unit_value: f32 = 0.0;
-        let mut _z_unit_value: f32 = 0.0;
+        // offset of camera (height)
+        let y_offset: f32 = 0.5;
+
+        // xyz position of camera
+        let mut _x_position: f32 = 0.0;
+        let mut _y_position: f32 = y_offset;
+        let mut _z_position: f32 = 0.0;
+
+        // rotation of camera (in radians around x and y axis)
         let mut _x_rotation: f32 = 0.0;
         let mut _y_rotation: f32 = 0.0;
-        // let mut _z_rotation: f32 = 0.0;
+
+        // movement and rotation speed
         let movement_unit: f32 = 0.65;
-        let rotation_unit: f32 = 0.75;
-        let one_full_rotation: f32 = 2.0 * std::f32::consts::PI;
+        let rotation_unit: f32 = 0.55;
+
+        // x and y axis for rotation
+        let x_axis: glm::Vec3 = glm::vec3(1.0, 0.0, 0.0);
+        let y_axis: glm::Vec3 = glm::vec3(0.0, 1.0, 0.0);
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
         let mut previous_frame_time = first_frame_time;
         loop {
-            _y_unit_value -= 0.5 * movement_unit;
+            _y_position -= 0.5 * movement_unit;
 
-            if _y_unit_value < 0.0 {
-                _y_unit_value = 0.0;
+            if _y_position < y_offset {
+                _y_position = y_offset;
             }
 
             // Compute time passed since the previous frame and since the start of the program
@@ -338,22 +347,22 @@ fn main() {
                         // The `VirtualKeyCode` enum is defined here:
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
                         VirtualKeyCode::W => {
-                            _z_unit_value -= movement_unit * delta_time;
+                            _z_position -= movement_unit * delta_time;
                         }
                         VirtualKeyCode::S => {
-                            _z_unit_value += movement_unit * delta_time;
+                            _z_position += movement_unit * delta_time;
                         }
                         VirtualKeyCode::D => {
-                            _x_unit_value += 20.0 * movement_unit * delta_time;
+                            _x_position += 20.0 * movement_unit * delta_time;
                         }
                         VirtualKeyCode::A => {
-                            _x_unit_value -= 20.0 * movement_unit * delta_time;
+                            _x_position -= 20.0 * movement_unit * delta_time;
                         }
                         VirtualKeyCode::Space => {
-                            _y_unit_value += movement_unit;
+                            _y_position += movement_unit;
                         }
                         VirtualKeyCode::LShift => {
-                            _y_unit_value -= movement_unit;
+                            _y_position -= movement_unit;
                         }
                         VirtualKeyCode::Up => {
                             _x_rotation += rotation_unit * delta_time;
@@ -395,18 +404,19 @@ fn main() {
                 // let identity: glm::Mat4x4 = glm::identity();
                 // gl::UniformMatrix4fv(2, 1, gl::FALSE, identity.as_ptr());
 
+                // set perspective of camera
                 let perspective: glm::Mat4x4 =
                     glm::perspective(window_aspect_ratio, 75.0, 1.0, 100.0);
-
                 gl::UniformMatrix4fv(2, 1, gl::FALSE, perspective.as_ptr());
 
+                // set position of camera
                 let mut position: glm::Mat4x4 =
-                    glm::translation(&glm::vec3(_x_unit_value, _y_unit_value, _z_unit_value));
+                    glm::translation(&glm::vec3(_x_position, _y_position, _z_position));
                 gl::UniformMatrix4fv(3, 1, gl::FALSE, position.as_ptr());
 
+                // set rotation of camera
                 let mut rotation: glm::Mat4x4 =
-                    glm::rotation(_x_rotation, &glm::vec3(1.0, 0.0, 0.0))
-                        * glm::rotation(_y_rotation, &glm::vec3(0.0, 1.0, 0.0));
+                    glm::rotation(_x_rotation, &x_axis) * glm::rotation(_y_rotation, &y_axis);
                 gl::UniformMatrix4fv(4, 1, gl::FALSE, rotation.as_ptr());
 
                 // Draw the triangles using the indices
