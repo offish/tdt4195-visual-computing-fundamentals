@@ -3,9 +3,7 @@
 layout(location = 0) in vec3 position; // xyz
 layout(location = 1) in vec4 vertexColor; // RGBA
 // uniform layout(location = 2) float elapsed;
-uniform layout(location = 2) mat4x4 transformationMatrix;
-uniform layout(location = 3) mat4x4 positionMatrix;
-uniform layout(location = 4) mat4x4 rotationMatrix;
+uniform layout(location = 2) mat4x4 transformMatrix;
 out vec4 fragmentColor; // output to fragment shader
 
 void main()
@@ -33,7 +31,6 @@ void main()
     // give color to fragment shader
     fragmentColor = vertexColor;
     
-    // gl_Position = transformationMatrix * translationMatrix * vec4(position, 1.0f);
-    gl_Position = transformationMatrix * rotationMatrix * translationMatrix * positionMatrix * vec4(position, 1.0f);
+    gl_Position = transformMatrix * translationMatrix * vec4(position, 1.0f);
     // gl_Position = identityMatrix * vec4(position, 1.0f);
 }
