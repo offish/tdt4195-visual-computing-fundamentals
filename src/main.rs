@@ -11,7 +11,8 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::{mem, os::raw::c_void, ptr};
 
-mod obj;
+// mod obj;
+mod mesh;
 mod shader;
 mod util;
 
@@ -57,11 +58,17 @@ fn offset<T>(n: u32) -> *const c_void {
 // Get a null pointer (equivalent to an offset of 0)
 // ptr::null()
 
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>) -> u32 {
+unsafe fn create_vao(
+    vertices: &Vec<f32>,
+    indices: &Vec<u32>,
+    colors: &Vec<f32>,
+    normals: &Vec<f32>,
+) -> u32 {
     let mut vao: u32 = 0;
     let mut vbo: u32 = 0;
     let mut color_vbo: u32 = 0;
     let mut ibo: u32 = 0;
+    let mut normal_vbo: u32 = 0;
 
     // vertex array object (VAO)
     gl::GenVertexArrays(1, &mut vao);
@@ -98,6 +105,16 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>)
         gl::STATIC_DRAW,
     );
 
+    // normal buffer object
+    gl::GenBuffers(1, &mut normal_vbo);
+    gl::BindBuffer(gl::ARRAY_BUFFER, normal_vbo);
+    gl::BufferData(
+        gl::ARRAY_BUFFER,
+        byte_size_of_array(normals),
+        pointer_to_array(normals),
+        gl::STATIC_DRAW,
+    );
+
     // vertex attribute pointer (color)
     gl::VertexAttribPointer(
         1,
@@ -108,6 +125,17 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>)
         ptr::null(),
     );
     gl::EnableVertexAttribArray(1);
+
+    // vertex attribute pointer (normal)
+    gl::VertexAttribPointer(
+        2,
+        4,
+        gl::FLOAT,
+        gl::FALSE,
+        3 * size_of::<f32>(),
+        ptr::null(),
+    );
+    gl::EnableVertexAttribArray(2);
 
     // index buffer object (IBO)
     gl::GenBuffers(1, &mut ibo);
@@ -191,80 +219,50 @@ fn main() {
             );
         }
 
-        let vertices: Vec<f32> = vec![
-            -0.25, -0.47, 0.90, // vertex 1
-            0.68, -0.15, 0.90, // vertex 3
-            0.11, 0.67, 0.90, // vertex 2
-            0.10, 0.44, 0.50, // vertex 1
-            0.80, 0.09, 0.50, // vertex 2
-            0.72, 0.99, 0.50, // a
-            -0.25, 0.09, 0.10, // vertex 1
-            0.58, 0.56, 0.10, // vertex 2
-            -0.06, 0.96, 0.10,
-        ];
-
-        // Index data: the indices for the triangles
-        let indices: Vec<u32> = vec![
-            0, 1, 2, // triangle 1
-            3, 4, 5, // triangle 2
-            6, 7, 8, // triangle 3
-        ];
-
-        let colors: Vec<f32> = vec![
-            // triangle 1
-            1.0, 0.0, 0.0, 0.5, // vertex 1
-            1.0, 0.0, 0.0, 0.5, // vertex 1
-            1.0, 0.0, 0.0, 0.5, // vertex 1
-            0.0, 1.0, 0.0, 0.5, // vertex 1
-            0.0, 1.0, 0.0, 0.5, // vertex 1
-            0.0, 1.0, 0.0, 0.5, // vertex 1
-            0.0, 0.0, 1.0, 0.5, // vertex 3
-            0.0, 0.0, 1.0, 0.5, // vertex 3
-            0.0, 0.0, 1.0, 0.5, // vertex 3
-        ];
-
-        // 2a)
-        // let triangle_vertices: Vec<f32> = vec![
-        //     0.6, -0.8, -1.2, // point 1
-        //     0.0, 0.4, 0.0, // point 2
-        //     -0.8, -0.2, 1.2, // point 3
-        // ];
-        // let triangle_indices: Vec<u32> = vec![0, 1, 2];
-
-        // let pyramid_vertices: Vec<f32> = vec![
-        //     0.0, 0.0, 0.0, // vertex 1
-        //     1.0, 0.0, 0.0, // vertex 2
-        //     1.0, 1.0, 0.0, // vertex 3
-        //     0.0, 1.0, 0.0, // vertex 4
-        //     0.5, 0.5, 1.6, // vertex 5
-        // ];
-
-        // let pyramid_indices: Vec<u32> = vec![1, 2, 3, 4, 5];
-
         // actually creating the VAO
-        let my_vao = unsafe { create_vao(&vertices, &indices, &colors) };
-        // let pyramid_vao = unsafe { create_vao(&pyramid_vertices, &pyramid_indices) };
-        // let my_triangle = unsafe { create_vao(&triangle_vertices, &triangle_indices) };
+        let lunar = mesh::Terrain::load("./resources/lunarsurface.obj");
+        let lunar_vao: u32 = unsafe {
+            create_vao(
+                &lunar.vertices,
+                &lunar.indices,
+                &lunar.colors,
+                &lunar.normals,
+            )
+        };
 
-        // let mut obj_parser = obj::ObjParser::new("./models/cube.obj");
-        // let mut obj_parser = obj::ObjParser::new("./models/airboat.obj");
-        // obj_parser.parse();
-
-        // let vertices = obj_parser.get_vertices();
-        // let indices = obj_parser.get_indices();
-        // let mut colors: Vec<f32> = vec![];
-
-        // for i in 0..indices.len() {
-        //     colors.push(i as f32);
-        //     colors.push(1.0);
-        //     colors.push(0.0);
-        //     colors.push(1.0);
-        // }
-
-        // println!("Vertices: {:?} Length: {:?}", vertices, vertices.len());
-        // println!("Indices: {:?} Length: {:?}", indices, indices.len());
-
-        // let airboat_vao = unsafe { create_vao(&vertices, &indices, &colors) };
+        let helicopter = mesh::Helicopter::load("./resources/helicopter.obj");
+        let helicopter_door_vao: u32 = unsafe {
+            create_vao(
+                &helicopter.door.vertices,
+                &helicopter.door.indices,
+                &helicopter.door.colors,
+                &helicopter.door.normals,
+            )
+        };
+        let helicopter_body_vao: u32 = unsafe {
+            create_vao(
+                &helicopter.body.vertices,
+                &helicopter.body.indices,
+                &helicopter.body.colors,
+                &helicopter.body.normals,
+            )
+        };
+        let helicopter_main_rotor_vao: u32 = unsafe {
+            create_vao(
+                &helicopter.main_rotor.vertices,
+                &helicopter.main_rotor.indices,
+                &helicopter.main_rotor.colors,
+                &helicopter.main_rotor.normals,
+            )
+        };
+        let helicopter_tail_rotor_vao: u32 = unsafe {
+            create_vao(
+                &helicopter.tail_rotor.vertices,
+                &helicopter.tail_rotor.indices,
+                &helicopter.tail_rotor.colors,
+                &helicopter.tail_rotor.normals,
+            )
+        };
 
         // == // Set up your shaders here
         // Basic usage of shader helper:
@@ -284,7 +282,7 @@ fn main() {
 
         // offset of camera (height)
         let y_offset: f32 = 0.5;
-        let falling_speed: f32 = 0.5;
+        let falling_speed: f32 = 0.0;
 
         // xyz position of camera
         let mut _x_position: f32 = 0.0;
@@ -296,8 +294,8 @@ fn main() {
         let mut _y_rotation: f32 = 0.0;
 
         // movement and rotation speed
-        let movement_unit: f32 = 1.0;
-        let rotation_unit: f32 = 1.0;
+        let movement_unit: f32 = 10.0;
+        let rotation_unit: f32 = 2.0;
 
         // x and y axis for rotation
         let x_axis: glm::Vec3 = glm::vec3(1.0, 0.0, 0.0);
@@ -398,26 +396,51 @@ fn main() {
 
                 // set perspective of camera
                 let perspective: glm::Mat4x4 =
-                    glm::perspective(window_aspect_ratio, 75.0, 1.0, 100.0);
+                    glm::perspective(window_aspect_ratio, 55.0, 1.0, 1_000.0);
 
                 // set position of camera
-                let mut position: glm::Mat4x4 =
+                let position: glm::Mat4x4 =
                     glm::translation(&glm::vec3(_x_position, _y_position, _z_position));
 
                 // set rotation of camera
-                let mut rotation: glm::Mat4x4 =
+                let rotation: glm::Mat4x4 =
                     glm::rotation(_x_rotation, &x_axis) * glm::rotation(_y_rotation, &y_axis);
 
                 let transform_matrix: glm::Mat4x4 = perspective * rotation * position;
-                gl::UniformMatrix4fv(2, 1, gl::FALSE, transform_matrix.as_ptr());
+                gl::UniformMatrix4fv(3, 1, gl::FALSE, transform_matrix.as_ptr());
 
                 // Draw the triangles using the indices
                 gl::DrawElements(
                     gl::TRIANGLES,
-                    indices.len() as i32,
+                    lunar.indices.len() as i32,
                     gl::UNSIGNED_INT,
                     ptr::null(),
                 );
+
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    helicopter.door.indices.len() as i32,
+                    gl::UNSIGNED_INT,
+                    ptr::null(),
+                );
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    helicopter.body.indices.len() as i32,
+                    gl::UNSIGNED_INT,
+                    ptr::null(),
+                );
+                // gl::DrawElements(
+                //     gl::TRIANGLES,
+                //     helicopter.main_rotor.indices.len() as i32,
+                //     gl::UNSIGNED_INT,
+                //     ptr::null(),
+                // );
+                // gl::DrawElements(
+                //     gl::TRIANGLES,
+                //     helicopter.tail_rotor.indices.len() as i32,
+                //     gl::UNSIGNED_INT,
+                //     ptr::null(),
+                // );
             }
 
             // Display the new color buffer on the display
