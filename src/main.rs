@@ -13,6 +13,7 @@ use std::{mem, os::raw::c_void, ptr};
 
 // mod obj;
 mod mesh;
+mod scene_graph;
 mod shader;
 mod util;
 
@@ -24,6 +25,7 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::ControlFlow;
+use scene_graph::SceneNode;
 
 // initial window size
 const INITIAL_SCREEN_W: u32 = 800;
@@ -151,6 +153,40 @@ unsafe fn create_vao(
     vao
 }
 
+unsafe fn draw_scene(
+    node: &scene_graph::SceneNode,
+    view_projection_matrix: &glm::Mat4,
+    transformation_so_far: &glm::Mat4,
+) {
+    // Perform any logic needed before drawing the node
+    let rotation = glm::rotation(node.rotation.x, &glm::vec3(1.0, 0.0, 0.0))
+        * glm::rotation(node.rotation.y, &glm::vec3(0.0, 1.0, 0.0))
+        * glm::rotation(node.rotation.z, &glm::vec3(0.0, 0.0, 1.0));
+    let translation = glm::translation(&node.position);
+    let scale = glm::scaling(&node.scale);
+    let reference_point = glm::translation(&node.reference_point);
+
+    let my_matrix: glm::Mat4 =
+        view_projection_matrix * translation * rotation * scale * reference_point;
+    gl::UniformMatrix4fv(3, 1, gl::FALSE, my_matrix.as_ptr());
+
+    // Check if node is drawable, if so: set uniforms, bind VAO and draw VAO
+    if node.index_count > 0 {
+        gl::BindVertexArray(node.vao_id);
+        gl::DrawElements(
+            gl::TRIANGLES,
+            node.index_count,
+            gl::UNSIGNED_INT,
+            ptr::null(),
+        );
+    }
+
+    // Recurse
+    for &child in &node.children {
+        draw_scene(&*child, view_projection_matrix, transformation_so_far);
+    }
+}
+
 fn main() {
     // Set up the necessary objects to deal with windows and event handling
     let el = glutin::event_loop::EventLoop::new();
@@ -219,6 +255,8 @@ fn main() {
             );
         }
 
+        let mut master_scene = SceneNode::new();
+
         // actually creating the VAO
         let lunar = mesh::Terrain::load("./resources/lunarsurface.obj");
         let lunar_vao: u32 = unsafe {
@@ -230,6 +268,9 @@ fn main() {
             )
         };
 
+        let mut lunar_node = SceneNode::from_vao(lunar_vao, lunar.index_count);
+        master_scene.add_child(&lunar_node);
+
         let helicopter = mesh::Helicopter::load("./resources/helicopter.obj");
         let helicopter_door_vao: u32 = unsafe {
             create_vao(
@@ -239,6 +280,8 @@ fn main() {
                 &helicopter.door.normals,
             )
         };
+        let helicopter_door = SceneNode::from_vao(helicopter_door_vao, helicopter.door.index_count);
+
         let helicopter_body_vao: u32 = unsafe {
             create_vao(
                 &helicopter.body.vertices,
@@ -247,6 +290,8 @@ fn main() {
                 &helicopter.body.normals,
             )
         };
+        let helicopter_body = SceneNode::from_vao(helicopter_body_vao, helicopter.body.index_count);
+
         let helicopter_main_rotor_vao: u32 = unsafe {
             create_vao(
                 &helicopter.main_rotor.vertices,
@@ -255,6 +300,9 @@ fn main() {
                 &helicopter.main_rotor.normals,
             )
         };
+        let helicopter_main_rotor =
+            SceneNode::from_vao(helicopter_main_rotor_vao, helicopter.main_rotor.index_count);
+
         let helicopter_tail_rotor_vao: u32 = unsafe {
             create_vao(
                 &helicopter.tail_rotor.vertices,
@@ -263,6 +311,20 @@ fn main() {
                 &helicopter.tail_rotor.normals,
             )
         };
+        let helicopter_tail_rotor =
+            SceneNode::from_vao(helicopter_tail_rotor_vao, helicopter.tail_rotor.index_count);
+
+        let mut helicopter_node = SceneNode::new();
+        helicopter_node.add_child(&helicopter_body);
+        helicopter_node.add_child(&helicopter_door);
+        helicopter_node.add_child(&helicopter_main_rotor);
+        helicopter_node.add_child(&helicopter_tail_rotor);
+
+        master_scene.add_child(&helicopter_node);
+
+        // master_scene.print();
+        // lunar_node.print();
+        // helicopter_node.print();
 
         // == // Set up your shaders here
         // Basic usage of shader helper:
@@ -294,7 +356,7 @@ fn main() {
         let mut _y_rotation: f32 = 0.0;
 
         // movement and rotation speed
-        let movement_unit: f32 = 10.0;
+        let movement_unit: f32 = 5.0;
         let rotation_unit: f32 = 2.0;
 
         // x and y axis for rotation
@@ -407,42 +469,9 @@ fn main() {
                     glm::rotation(_x_rotation, &x_axis) * glm::rotation(_y_rotation, &y_axis);
 
                 let transform_matrix: glm::Mat4x4 = perspective * rotation * position;
-                gl::UniformMatrix4fv(3, 1, gl::FALSE, transform_matrix.as_ptr());
 
-                // Draw the triangles using the indices
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    lunar.indices.len() as i32,
-                    gl::UNSIGNED_INT,
-                    ptr::null(),
-                );
-
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    helicopter.door.indices.len() as i32,
-                    gl::UNSIGNED_INT,
-                    ptr::null(),
-                );
-                gl::DrawElements(
-                    gl::TRIANGLES,
-                    helicopter.body.indices.len() as i32,
-                    gl::UNSIGNED_INT,
-                    ptr::null(),
-                );
-                // gl::DrawElements(
-                //     gl::TRIANGLES,
-                //     helicopter.main_rotor.indices.len() as i32,
-                //     gl::UNSIGNED_INT,
-                //     ptr::null(),
-                // );
-                // gl::DrawElements(
-                //     gl::TRIANGLES,
-                //     helicopter.tail_rotor.indices.len() as i32,
-                //     gl::UNSIGNED_INT,
-                //     ptr::null(),
-                // );
+                draw_scene(&master_scene, &transform_matrix, &glm::zero());
             }
-
             // Display the new color buffer on the display
             context.swap_buffers().unwrap(); // we use "double buffering" to avoid artifacts
         }
