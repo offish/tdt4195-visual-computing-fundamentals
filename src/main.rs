@@ -15,6 +15,7 @@ use std::{mem, os::raw::c_void, ptr};
 mod mesh;
 mod scene_graph;
 mod shader;
+mod toolbox;
 mod util;
 
 use glutin::event::{
@@ -26,6 +27,7 @@ use glutin::event::{
 };
 use glutin::event_loop::ControlFlow;
 use scene_graph::SceneNode;
+use toolbox::simple_heading_animation;
 
 // initial window size
 const INITIAL_SCREEN_W: u32 = 800;
@@ -131,7 +133,7 @@ unsafe fn create_vao(
     // vertex attribute pointer (normal)
     gl::VertexAttribPointer(
         2,
-        4,
+        3,
         gl::FLOAT,
         gl::FALSE,
         3 * size_of::<f32>(),
@@ -158,20 +160,24 @@ unsafe fn draw_scene(
     view_projection_matrix: &glm::Mat4,
     transformation_so_far: &glm::Mat4,
 ) {
-    // Perform any logic needed before drawing the node
+    // let  my_transformation: glm::Mat4 = glm::identity();
     let rotation = glm::rotation(node.rotation.x, &glm::vec3(1.0, 0.0, 0.0))
         * glm::rotation(node.rotation.y, &glm::vec3(0.0, 1.0, 0.0))
         * glm::rotation(node.rotation.z, &glm::vec3(0.0, 0.0, 1.0));
     let translation = glm::translation(&node.position);
-    let scale = glm::scaling(&node.scale);
+    // let scale = glm::scaling(&node.scale);
     let reference_point = glm::translation(&node.reference_point);
 
-    let my_matrix: glm::Mat4 =
-        view_projection_matrix * translation * rotation * scale * reference_point;
-    gl::UniformMatrix4fv(3, 1, gl::FALSE, my_matrix.as_ptr());
+    let my_transformation = translation * rotation * reference_point;
 
     // Check if node is drawable, if so: set uniforms, bind VAO and draw VAO
     if node.index_count > 0 {
+        // Perform any logic needed before drawing the node
+        let my_matrix: glm::Mat4 =
+            view_projection_matrix * transformation_so_far * my_transformation;
+        // view_projection_matrix * translation * rotation * scale * reference_point;
+        gl::UniformMatrix4fv(3, 1, gl::FALSE, my_matrix.as_ptr());
+
         gl::BindVertexArray(node.vao_id);
         gl::DrawElements(
             gl::TRIANGLES,
@@ -183,7 +189,7 @@ unsafe fn draw_scene(
 
     // Recurse
     for &child in &node.children {
-        draw_scene(&*child, view_projection_matrix, transformation_so_far);
+        draw_scene(&*child, view_projection_matrix, &my_transformation);
     }
 }
 
@@ -255,10 +261,10 @@ fn main() {
             );
         }
 
-        let mut master_scene = SceneNode::new();
-
         // actually creating the VAO
         let lunar = mesh::Terrain::load("./resources/lunarsurface.obj");
+        let helicopter = mesh::Helicopter::load("./resources/helicopter.obj");
+
         let lunar_vao: u32 = unsafe {
             create_vao(
                 &lunar.vertices,
@@ -268,10 +274,6 @@ fn main() {
             )
         };
 
-        let mut lunar_node = SceneNode::from_vao(lunar_vao, lunar.index_count);
-        master_scene.add_child(&lunar_node);
-
-        let helicopter = mesh::Helicopter::load("./resources/helicopter.obj");
         let helicopter_door_vao: u32 = unsafe {
             create_vao(
                 &helicopter.door.vertices,
@@ -280,7 +282,8 @@ fn main() {
                 &helicopter.door.normals,
             )
         };
-        let helicopter_door = SceneNode::from_vao(helicopter_door_vao, helicopter.door.index_count);
+        let mut helicopter_door =
+            SceneNode::from_vao(helicopter_door_vao, helicopter.door.index_count);
 
         let helicopter_body_vao: u32 = unsafe {
             create_vao(
@@ -290,7 +293,8 @@ fn main() {
                 &helicopter.body.normals,
             )
         };
-        let helicopter_body = SceneNode::from_vao(helicopter_body_vao, helicopter.body.index_count);
+        let mut helicopter_body =
+            SceneNode::from_vao(helicopter_body_vao, helicopter.body.index_count);
 
         let helicopter_main_rotor_vao: u32 = unsafe {
             create_vao(
@@ -300,7 +304,7 @@ fn main() {
                 &helicopter.main_rotor.normals,
             )
         };
-        let helicopter_main_rotor =
+        let mut helicopter_main_rotor =
             SceneNode::from_vao(helicopter_main_rotor_vao, helicopter.main_rotor.index_count);
 
         let helicopter_tail_rotor_vao: u32 = unsafe {
@@ -311,10 +315,23 @@ fn main() {
                 &helicopter.tail_rotor.normals,
             )
         };
-        let helicopter_tail_rotor =
+        let mut helicopter_tail_rotor =
             SceneNode::from_vao(helicopter_tail_rotor_vao, helicopter.tail_rotor.index_count);
 
+        let mut master_scene = SceneNode::new();
+        let mut lunar_node = SceneNode::from_vao(lunar_vao, lunar.index_count);
         let mut helicopter_node = SceneNode::new();
+
+        lunar_node.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        master_scene.add_child(&lunar_node);
+
+        helicopter_body.reference_point = glm::vec3(0.35, 2.3, 10.4);
+        helicopter_door.reference_point = glm::vec3(0.35, 2.3, 10.4);
+        helicopter_main_rotor.reference_point = glm::vec3(0.0, 0.0, 0.0);
+        // helicopter_main_rotor.reference_point = glm::vec3(0.35, 2.3, 10.4);
+        helicopter_tail_rotor.reference_point = glm::vec3(0.35, 2.3, 10.4);
+        helicopter_main_rotor.position = glm::vec3(0.35, 2.3, 10.4);
+
         helicopter_node.add_child(&helicopter_body);
         helicopter_node.add_child(&helicopter_door);
         helicopter_node.add_child(&helicopter_main_rotor);
@@ -344,7 +361,7 @@ fn main() {
 
         // offset of camera (height)
         let y_offset: f32 = 0.5;
-        let falling_speed: f32 = 0.0;
+        // let falling_speed: f32 = 0.0;
 
         // xyz position of camera
         let mut _x_position: f32 = 0.0;
@@ -356,7 +373,7 @@ fn main() {
         let mut _y_rotation: f32 = 0.0;
 
         // movement and rotation speed
-        let movement_unit: f32 = 5.0;
+        let movement_unit: f32 = 1.0;
         let rotation_unit: f32 = 2.0;
 
         // x and y axis for rotation
@@ -367,12 +384,6 @@ fn main() {
         let first_frame_time = std::time::Instant::now();
         let mut previous_frame_time = first_frame_time;
         loop {
-            _y_position -= falling_speed * movement_unit;
-
-            if _y_position < y_offset {
-                _y_position = y_offset;
-            }
-
             // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
@@ -414,6 +425,9 @@ fn main() {
                             _y_position += movement_unit;
                         }
                         VirtualKeyCode::LShift => {
+                            _y_position -= movement_unit;
+                        }
+                        VirtualKeyCode::LControl => {
                             _y_position -= movement_unit;
                         }
                         VirtualKeyCode::Up => {
@@ -469,6 +483,15 @@ fn main() {
                     glm::rotation(_x_rotation, &x_axis) * glm::rotation(_y_rotation, &y_axis);
 
                 let transform_matrix: glm::Mat4x4 = perspective * rotation * position;
+
+                // animations
+                let heading = simple_heading_animation(elapsed);
+
+                helicopter_node.position = glm::vec3(-heading.x, -10.0, -heading.z);
+                helicopter_node.rotation = glm::vec3(heading.pitch, heading.yaw, heading.roll);
+
+                helicopter_tail_rotor.rotation = glm::vec3(1.0, 0.0, 0.0) * 5_000.0 * elapsed;
+                helicopter_main_rotor.rotation = glm::vec3(0.0, 1.0, 0.0) * 5_000.0 * elapsed;
 
                 draw_scene(&master_scene, &transform_matrix, &glm::zero());
             }
