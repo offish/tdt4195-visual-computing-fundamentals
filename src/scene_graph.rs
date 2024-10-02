@@ -17,6 +17,7 @@ use std::pin::Pin;
 pub type Node = ManuallyDrop<Pin<Box<SceneNode>>>;
 
 pub struct SceneNode {
+    pub name: String,               // What I am called
     pub position: glm::Vec3,        // Where I should be in relation to my parent
     pub rotation: glm::Vec3,        // How I should be rotated, around the X, the Y and the Z axes
     pub scale: glm::Vec3,           // How I should be scaled
@@ -31,6 +32,7 @@ pub struct SceneNode {
 impl SceneNode {
     pub fn new() -> Node {
         ManuallyDrop::new(Pin::new(Box::new(SceneNode {
+            name: String::from(""),
             position: glm::zero(),
             rotation: glm::zero(),
             scale: glm::vec3(1.0, 1.0, 1.0),
@@ -43,6 +45,7 @@ impl SceneNode {
 
     pub fn from_vao(vao_id: u32, index_count: i32) -> Node {
         ManuallyDrop::new(Pin::new(Box::new(SceneNode {
+            name: String::from(""),
             position: glm::zero(),
             rotation: glm::zero(),
             scale: glm::vec3(1.0, 1.0, 1.0),
