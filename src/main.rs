@@ -167,16 +167,16 @@ unsafe fn draw_scene(
     let translation = glm::translation(&node.position);
     // let scale = glm::scaling(&node.scale);
     let reference_point = glm::translation(&node.reference_point);
-
     let my_transformation = translation * rotation * reference_point;
 
     // Check if node is drawable, if so: set uniforms, bind VAO and draw VAO
     if node.index_count > 0 {
-        // Perform any logic needed before drawing the node
-        let my_matrix: glm::Mat4 =
-            view_projection_matrix * transformation_so_far * my_transformation;
-        // view_projection_matrix * translation * rotation * scale * reference_point;
-        gl::UniformMatrix4fv(3, 1, gl::FALSE, my_matrix.as_ptr());
+        let model_matrix: glm::Mat4 = transformation_so_far * my_transformation;
+        let mvp_matrix: glm::Mat4 = view_projection_matrix * model_matrix;
+        let mvp_3x3_matrix: glm::Mat3 = glm::mat4_to_mat3(&model_matrix);
+
+        gl::UniformMatrix3fv(3, 1, gl::FALSE, mvp_3x3_matrix.as_ptr());
+        gl::UniformMatrix4fv(4, 1, gl::FALSE, mvp_matrix.as_ptr());
 
         gl::BindVertexArray(node.vao_id);
         gl::DrawElements(
@@ -462,13 +462,6 @@ fn main() {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-                // pass time to shader
-                // gl::Uniform1f(2, elapsed.sin());
-
-                // pass transformations to shader
-                // let identity: glm::Mat4x4 = glm::identity();
-                // gl::UniformMatrix4fv(2, 1, gl::FALSE, identity.as_ptr());
 
                 // set perspective of camera
                 let perspective: glm::Mat4x4 =
