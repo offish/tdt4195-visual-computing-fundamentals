@@ -171,5 +171,8 @@ target
 *.html
 *.zip
 *.obj
+etc
+logs
+data
 
 temp.py

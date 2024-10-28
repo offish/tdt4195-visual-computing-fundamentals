@@ -1,0 +1,11 @@
+Which of the following best describes the process of sampling?
+The process of converting a continuous signal to a discrete one by reading values at a set time interval.
+
+What is quantization in the context of signal processing?
+The process of converting continuous amplitudes from sampled values by rounding to one of the possible discrete values.
+
+When looking at an image histogram, which characteristic indicates high contrast?
+The histogram is spread out, utilizing a large portion of the intensity spectrum.
+
+What is the effect of applying a log transform to an image with a large variance in pixel intensities on its dynamic range?
+The dynamic range decreases.
