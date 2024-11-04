@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 
 image_output_dir = pathlib.Path("image_processed")
 image_output_dir.mkdir(exist_ok=True, parents=True)
-latex_path = pathlib.Path("..","latex","figures") #sol
+latex_path = pathlib.Path("..", "latex", "figures")  # sol
+
 
 def to_uint8(im):
     # Converts and squashes an image to uint8.
@@ -22,12 +23,14 @@ def to_uint8(im):
     if im.dtype == np.uint8:
         return im
     if im.min() >= 0.0 and im.max() <= 1.0:
-        im = (im*255).astype(np.uint8)
+        im = (im * 255).astype(np.uint8)
         return im
-    warnings.warn("Image min/max is outside the range [0.0, 1.0]. Squashing the image to this range. (Can be safely ignored)")
+    warnings.warn(
+        "Image min/max is outside the range [0.0, 1.0]. Squashing the image to this range. (Can be safely ignored)"
+    )
     im = im - im.min()
     im = im / im.max()
-    im = (im*255).astype(np.uint8)
+    im = (im * 255).astype(np.uint8)
     return im
 
 
@@ -56,8 +59,7 @@ def uint8_to_float(im: np.array):
     return im
 
 
-def create_high_pass_frequency_kernel(im: np.array,
-                                      radius: int):
+def create_high_pass_frequency_kernel(im: np.array, radius: int):
     """
     Creates a high pass filter with size radius.
     Returns a kernel in the frequency domain
@@ -69,8 +71,9 @@ def create_high_pass_frequency_kernel(im: np.array,
     """
     center_col = im.shape[1] // 2
     center_row = im.shape[0] // 2
-    assert len(im.shape) == 2,\
-        "Expected a grayscale image. Got image shape: {}".format(im.shape)
+    assert len(im.shape) == 2, "Expected a grayscale image. Got image shape: {}".format(
+        im.shape
+    )
     kernel = np.ones_like((im))
     rr, cc = skimage.draw.disk((center_row, center_col), radius)
     kernel[rr, cc] = 0.0
@@ -120,10 +123,9 @@ def find_angle(im_binary: np.ndarray) -> float:
     Returns:
         [float]: [The angle in degrees]
     """
-    angles = np.linspace(-np.pi/2, np.pi/2, 360)
+    angles = np.linspace(-np.pi / 2, np.pi / 2, 360)
     h, theta, d = skimage.transform.hough_line(im_binary, theta=angles)
-    _, angles, distances = skimage.transform.hough_line_peaks(
-        h, theta, d, num_peaks=1)
+    _, angles, distances = skimage.transform.hough_line_peaks(h, theta, d, num_peaks=1)
     return angles, distances
 
 
@@ -153,7 +155,7 @@ def np_make_image_grid(images, nrow, pad=2):
     ncol = int(np.ceil(len(images) / nrow))
     ncolors = images[0].shape[-1]
     result_imshape = [nrow * (height + pad), ncol * (width + pad), ncolors]
-    if len(images[0].shape) == 2: # grayscale image
+    if len(images[0].shape) == 2:  # grayscale image
         ncolors = 1
         result_imshape[-1] = 1
     im_result = np.zeros(result_imshape, dtype=images[0].dtype)
@@ -165,8 +167,11 @@ def np_make_image_grid(images, nrow, pad=2):
             im = images[im_idx]
             im = normalize(im)
             im_idx += 1
-            im_result[row * (pad + height): (row) * (pad + height) + height,
-                      col * (pad + width): (col) * (pad + width) + width, :] = im.reshape(height, width, -1)
+            im_result[
+                row * (pad + height) : (row) * (pad + height) + height,
+                col * (pad + width) : (col) * (pad + width) + width,
+                :,
+            ] = im.reshape(height, width, -1)
     if ncolors == 1:
         im_result = im_result[:, :, 0]
     return im_result

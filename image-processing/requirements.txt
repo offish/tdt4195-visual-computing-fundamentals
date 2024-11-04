@@ -6,3 +6,4 @@ numpy
 notebook
 lightning
 pandas
+scikit-image
