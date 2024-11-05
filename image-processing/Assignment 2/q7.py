@@ -1,1 +1,1 @@
-val_acc = 0
+val_acc = 0.992

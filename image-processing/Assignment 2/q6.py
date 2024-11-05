@@ -2,13 +2,6 @@ def create_model():
     """
     Initializes the model. Edit the code below if you would like to change the model.
     """
-    # Replace this placeholder network.
-    # model = nn.Sequential(
-    #     nn.Flatten(),  # Flattens the image from shape (batch_size, C, Height, width) to (batch_size, C*height*width)
-    #     nn.Linear(32*32*1, 10),
-    # )
-
-    # return model
     model = nn.Sequential(
         # layer 1
         nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5, stride=1, padding=2),
