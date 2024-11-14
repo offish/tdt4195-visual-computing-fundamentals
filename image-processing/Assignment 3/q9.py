@@ -6,7 +6,7 @@ def remove_noise(im: np.ndarray) -> np.ndarray:
     return:
         (np.ndarray) of shape (H, W). dtype=bool
     """
-    ### START YOUR CODE HERE ### (You can change anything inside this block)
-    # You can also define other helper functions
+    # first erosion
+
+    # then dilation
     return im
-    ### END YOUR CODE HERE ###

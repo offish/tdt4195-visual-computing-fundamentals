@@ -9,9 +9,26 @@ def otsu_thresholding(im: np.ndarray) -> int:
         (int) the computed thresholding value
     """
     assert im.dtype == np.uint8
-    ### START YOUR CODE HERE ### (You can change anything inside this block)
-    # You can also define other helper functions
-    # Compute normalized histogram
-    threshold = 128
+
+    threshold = 0
+    biggest_sigma = 0
+
+    # grayscale image histogram
+    for k in range(0, 255):
+        w0 = np.sum(im < k) / im.size
+        w1 = np.sum(im >= k) / im.size
+
+        # no values which are less than k or greater than k
+        if w0 == 0 or w1 == 0:
+            continue
+
+        m0 = np.sum(im[im < k]) / np.sum(im < k)
+        m1 = np.sum(im[im >= k]) / np.sum(im >= k)
+
+        sigma = w0 * w1 * (m0 - m1) ** 2
+
+        if sigma > biggest_sigma:
+            biggest_sigma = sigma
+            threshold = k
+
     return threshold
-    ### END YOUR CODE HERE ###
