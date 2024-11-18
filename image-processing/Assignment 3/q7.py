@@ -10,25 +10,31 @@ def otsu_thresholding(im: np.ndarray) -> int:
     """
     assert im.dtype == np.uint8
 
+    flat_image = im.ravel()
+    histogram, _ = np.histogram(flat_image, bins=256, range=(0, 256))
+
+    histogram = histogram / im.size
+    variance = 0
     threshold = 0
-    biggest_sigma = 0
 
-    # grayscale image histogram
-    for k in range(0, 255):
-        w0 = np.sum(im < k) / im.size
-        w1 = np.sum(im >= k) / im.size
+    for k in range(256):
+        w0 = np.sum(histogram[: (k + 1)])
+        w1 = np.sum(histogram[(k + 1) :])
 
-        # no values which are less than k or greater than k
-        if w0 == 0 or w1 == 0:
-            continue
+        if w0 > 0:
+            mu0 = np.sum(np.arange(0, k + 1) * histogram[0 : (k + 1)]) / w0
+        else:
+            mu0 = 0
 
-        m0 = np.sum(im[im < k]) / np.sum(im < k)
-        m1 = np.sum(im[im >= k]) / np.sum(im >= k)
+        if w0 > 0:
+            mu1 = np.sum(np.arange(k + 1, 256) * histogram[(k + 1) : 256]) / w1
+        else:
+            mu1 = 0
 
-        sigma = w0 * w1 * (m0 - m1) ** 2
+        sigma = w0 * w1 * (mu0 - mu1) ** 2
 
-        if sigma > biggest_sigma:
-            biggest_sigma = sigma
+        if sigma > variance:
             threshold = k
+            variance = sigma
 
     return threshold

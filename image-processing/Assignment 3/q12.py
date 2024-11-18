@@ -14,9 +14,22 @@ def fill_holes(
     return:
         (np.ndarray) of shape (H, W). dtype=np.bool
     """
-    ### START YOUR CODE HERE ### (You can change anything inside this block)
-    # You can also define other helper functions
-    structuring_element = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=bool)
-    result = im.copy()
-    return result
-    ### END YOUR CODE HERE ###
+    structuring_element = np.array(
+        [
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1],
+        ],
+        dtype=bool,
+    )
+    filled = np.zeros_like(im, int)
+
+    for row, column in starting_points:
+        filled[row, column] = 1
+
+    for _ in range(1, num_iterations):
+        dilated = skimage.morphology.binary_dilation(filled, structuring_element)
+        inverted = ~im
+        filled = dilated & inverted
+
+    return filled | im

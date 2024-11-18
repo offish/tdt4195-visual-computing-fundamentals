@@ -6,7 +6,8 @@ def remove_noise(im: np.ndarray) -> np.ndarray:
     return:
         (np.ndarray) of shape (H, W). dtype=bool
     """
-    # first erosion
+    footprint = skimage.morphology.disk(8)
+    im = skimage.morphology.binary_closing(im, footprint)
+    im = skimage.morphology.binary_opening(im, footprint)
 
-    # then dilation
     return im

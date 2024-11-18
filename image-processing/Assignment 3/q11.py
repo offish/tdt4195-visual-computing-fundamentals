@@ -7,9 +7,14 @@ def extract_boundary(im: np.ndarray) -> np.ndarray:
     return:
         (np.ndarray) of shape (H, W). dtype=np.bool
     """
-    ### START YOUR CODE HERE ### (You can change anything inside this block)
-    # You can also define other helper functions
-    structuring_element = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=bool)
-    boundary = im
+    structuring_element = np.array(
+        [
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1],
+        ],
+        dtype=bool,
+    )
+    im_eroded = skimage.morphology.binary_erosion(im, structuring_element)
+    boundary = im ^ im_eroded
     return boundary
-    ### END YOUR CODE HERE ###
