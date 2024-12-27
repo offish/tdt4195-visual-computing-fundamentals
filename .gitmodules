@@ -1,0 +1,3 @@
+[submodule "TDT4195-StarterCode-2024"]
+	path = image-processing-starter
+	url = https://github.com/TDT4195-tutorial/TDT4195-StarterCode-2024.git
